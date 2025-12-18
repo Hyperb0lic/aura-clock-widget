@@ -7,19 +7,20 @@
     <style>
         :root {
             --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            --glass-bg: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.15);
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.1);
             --text-color: rgba(255, 255, 255, 0.95);
-            --blur-strength: 90px;
+            --blur-strength: 80px;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body {
-            background: #050505;
+            background: #000000;
             overflow: hidden;
             font-family: var(--font-main);
             height: 100vh;
+            height: 100dvh; /* Mobile viewport fix */
             width: 100vw;
             display: flex;
             justify-content: center;
@@ -36,7 +37,8 @@
             width: 100%;
             height: 100%;
             z-index: 0;
-            filter: blur(var(--blur-strength)) contrast(150%) brightness(1.2);
+            /* High contrast and brightness for "OLED Pop" */
+            filter: blur(var(--blur-strength)) contrast(160%) brightness(1.4);
             transform: scale(1.2); 
         }
 
@@ -47,7 +49,7 @@
             width: 100%;
             height: 100%;
             z-index: 1;
-            opacity: 0.04; 
+            opacity: 0.04; /* Reduced slightly for cleaner look */
             pointer-events: none;
             background-repeat: repeat;
         }
@@ -57,52 +59,56 @@
             position: relative;
             z-index: 2;
             text-align: center;
-            padding: 3rem 5rem;
+            padding: 2.5rem 3rem; /* Reduced horizontal padding slightly */
             border-radius: 30px;
             background: var(--glass-bg);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.4);
             user-select: none;
             pointer-events: none; 
+            width: auto;
+            min-width: 300px;
+            max-width: 90%;
         }
 
         .time {
-            font-size: clamp(3.5rem, 15vw, 9rem);
+            font-size: clamp(3.5rem, 18vw, 6.5rem);
             font-weight: 200;
             color: var(--text-color);
             line-height: 1;
-            letter-spacing: -3px;
+            letter-spacing: -2px;
             font-variant-numeric: tabular-nums;
-            text-shadow: 0 0 40px rgba(255,255,255,0.3);
+            text-shadow: 0 0 30px rgba(255,255,255,0.2);
         }
 
         .date {
             margin-top: 1rem;
-            font-size: clamp(0.8rem, 2.5vw, 1.2rem);
+            font-size: clamp(0.75rem, 3vw, 1rem);
             text-transform: uppercase;
-            letter-spacing: 0.4em;
-            color: rgba(255, 255, 255, 0.8);
-            font-weight: 600;
+            letter-spacing: 0.3em;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 500;
+            white-space: nowrap; /* CRITICAL FIX: Prevents date wrapping */
         }
 
         /* 3. CONTROLS (Corner) */
         .controls {
             position: fixed;
-            /* Safe area logic for notches/corners */
+            /* Increased base margin from 20px to 30px to avoid rounded corners clipping */
             top: max(30px, env(safe-area-inset-top) + 20px);
             right: max(30px, env(safe-area-inset-right) + 20px);
             z-index: 100;
             display: flex;
-            gap: 16px; /* More breathing room between buttons */
+            gap: 16px;
         }
 
         .icon-btn {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            width: 52px; /* Slightly larger touch target */
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            width: 52px; 
             height: 52px;
             border-radius: 16px;
             display: flex;
@@ -111,13 +117,13 @@
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             color: white;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
         .icon-btn:hover {
-            background: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.2);
             transform: translateY(-2px);
-            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
         }
 
         .icon-btn:active {
@@ -127,7 +133,7 @@
         .icon-btn svg {
             width: 26px;
             height: 26px;
-            stroke-width: 2;
+            stroke-width: 1.5;
             stroke: currentColor;
             fill: none;
             stroke-linecap: round;
@@ -153,13 +159,11 @@
         <button class="icon-btn" onclick="app.cyclePalette()" title="Change Aura">
             <!-- Easel Icon -->
             <svg viewBox="0 0 24 24">
-                <!-- Legs -->
-                <path d="M12 2l-8 19"></path>
-                <path d="M12 2l8 19"></path>
-                <!-- Crossbar -->
-                <path d="M4 16h16"></path>
-                <!-- Canvas Board -->
-                <rect x="7" y="6" width="10" height="8" rx="1"></rect>
+                <path d="M12 3l-8 18"></path>
+                <path d="M12 3l8 18"></path>
+                <path d="M12 3v10"></path>
+                <rect x="6" y="8" width="12" height="9" rx="1" fill="rgba(255,255,255,0.1)"></rect>
+                <path d="M5 17h14"></path>
             </svg>
         </button>
         <button class="icon-btn" onclick="app.toggleFullscreen()" title="Fullscreen">
@@ -172,16 +176,16 @@
 
 <script>
 /**
- * THE LIQUID AURA ENGINE v2.1
- * Adjustments: Slower physics, Easel Icon, Safe-area positioning.
+ * THE LIQUID AURA ENGINE v3.1
+ * Fixes: Button clipping, Date wrapping, Top-screen void.
  */
 
 const PALETTES = {
-    neon: ['#00FF87', '#60EFFF', '#0061FF', '#BC13FE'], 
-    warm: ['#FF930F', '#FFF95B', '#FF0F7B', '#F89B29'], 
-    ether: ['#6DD5FA', '#FFFFFF', '#2980B9', '#E0EAFC'], 
-    toxic: ['#CCFF00', '#00FF66', '#9933FF', '#CC00FF'], 
-    plasma: ['#FEAC5E', '#C779D0', '#4BC0C8', '#FFFFFF'], 
+    neon: ['#00FF99', '#00CCFF', '#FF00FF', '#CC00FF', '#FFFF00'], 
+    magma: ['#FF0000', '#FF4D00', '#FF9900', '#FFCC00', '#880000'], 
+    arctic: ['#00FFFF', '#0099FF', '#FFFFFF', '#0033FF', '#CCFFFF'], 
+    vapor: ['#FF71CE', '#01CDFE', '#05FFA1', '#B967FF', '#FFFB96'], 
+    bio: ['#39FF14', '#00FF00', '#1F51FF', '#BC13FE', '#FFFFFF'], 
 };
 
 class Blob {
@@ -193,50 +197,49 @@ class Blob {
         this.x = Math.random() * w;
         this.y = Math.random() * h;
         
-        // CALMER PHYSICS: Reduced multiplier from 3 to 0.8
-        this.vx = (Math.random() - 0.5) * 0.8; 
-        this.vy = (Math.random() - 0.5) * 0.8;
+        // Meditative speed
+        this.vx = (Math.random() - 0.5) * 0.7; 
+        this.vy = (Math.random() - 0.5) * 0.7;
         
-        this.radius = Math.random() * 180 + 120;
+        // Size variation
+        this.radius = Math.random() * 200 + 150;
         
-        // SLOWER BREATHING: Reduced growth rate
-        this.growth = Math.random() * 0.3 + 0.1; 
-        
-        this.maxRadius = this.radius + 60;
-        this.minRadius = this.radius - 60;
+        this.growth = Math.random() * 0.2 + 0.05; 
+        this.maxRadius = this.radius + 80;
+        this.minRadius = this.radius - 80;
         this.currentRadius = this.radius;
         this.growing = true;
         this.color = colors[Math.floor(Math.random() * colors.length)];
     }
 
     update(w, h, mouseX, mouseY) {
-        // 1. Wall Bouncing
-        if (this.x < -150 || this.x > w + 150) this.vx *= -1;
-        if (this.y < -150 || this.y > h + 150) this.vy *= -1;
+        // Wall Bouncing (Wide margins to allow blobs to float partially off-screen)
+        // This prevents the "black void" at edges
+        const margin = 200;
+        if (this.x < -margin || this.x > w + margin) this.vx *= -1;
+        if (this.y < -margin || this.y > h + margin) this.vy *= -1;
 
-        // 2. Mouse Interaction (Attraction/Repulsion field)
+        // Mouse Interaction
         const dx = mouseX - this.x;
         const dy = mouseY - this.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        const forceRadius = 500;
+        const forceRadius = 400;
 
         if (dist < forceRadius) {
             const force = (forceRadius - dist) / forceRadius;
-            // Gentle repulsion physics
-            this.vx -= (dx / dist) * force * 0.5; // Reduced force
-            this.vy -= (dy / dist) * force * 0.5;
+            this.vx -= (dx / dist) * force * 0.4;
+            this.vy -= (dy / dist) * force * 0.4;
         }
 
-        // 3. Apply Velocity & Friction limits
-        // CALMER LIMITS: Max speed reduced from 6 to 1.5
-        const maxSpeed = 1.5;
+        // Speed Limits
+        const maxSpeed = 1.2;
         this.vx = Math.max(Math.min(this.vx, maxSpeed), -maxSpeed);
         this.vy = Math.max(Math.min(this.vy, maxSpeed), -maxSpeed);
 
         this.x += this.vx;
         this.y += this.vy;
 
-        // 4. Pulse Radius
+        // Pulse
         if (this.growing) {
             this.currentRadius += this.growth;
             if (this.currentRadius > this.maxRadius) this.growing = false;
@@ -249,8 +252,10 @@ class Blob {
     draw(ctx) {
         ctx.beginPath();
         const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.currentRadius);
+        
+        // Solid core for better visibility
         gradient.addColorStop(0, this.color);
-        gradient.addColorStop(0.6, this.color); 
+        gradient.addColorStop(0.4, this.color); 
         gradient.addColorStop(1, 'rgba(0,0,0,0)'); 
 
         ctx.fillStyle = gradient;
@@ -268,7 +273,6 @@ class App {
         this.mouseX = -1000;
         this.mouseY = -1000;
         
-        // Palette State
         this.paletteKeys = Object.keys(PALETTES);
         this.paletteIndex = 0;
         this.currentColors = PALETTES[this.paletteKeys[0]];
@@ -284,7 +288,8 @@ class App {
     init() {
         this.resize();
         this.blobs = [];
-        for (let i = 0; i < 7; i++) {
+        // Increased count to 12 to fill voids
+        for (let i = 0; i < 12; i++) {
             this.blobs.push(new Blob(this.width, this.height, this.currentColors));
         }
     }
@@ -305,7 +310,7 @@ class App {
         const buffer32 = new Uint32Array(imgData.data.buffer);
         
         for (let i = 0; i < buffer32.length; i++) {
-            if (Math.random() < 0.5) buffer32[i] = 0xffffffff; // White noise
+            if (Math.random() < 0.5) buffer32[i] = 0xffffffff; 
         }
         
         nCtx.putImageData(imgData, 0, 0);
