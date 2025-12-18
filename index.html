@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Liquid Aura Clock</title>
     <style>
         :root {
@@ -16,7 +16,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body {
-            background: #050505; /* Deep black for contrast */
+            background: #050505;
             overflow: hidden;
             font-family: var(--font-main);
             height: 100vh;
@@ -25,7 +25,6 @@
             justify-content: center;
             align-items: center;
             cursor: crosshair;
-            /* Critical: Prevents mobile dragging/rubber-banding */
             touch-action: none; 
         }
 
@@ -37,7 +36,6 @@
             width: 100%;
             height: 100%;
             z-index: 0;
-            /* Increased blur for smoother liquid effect */
             filter: blur(var(--blur-strength)) contrast(150%) brightness(1.2);
             transform: scale(1.2); 
         }
@@ -49,7 +47,7 @@
             width: 100%;
             height: 100%;
             z-index: 1;
-            opacity: 0.04; /* Reduced opacity for cleaner look */
+            opacity: 0.04; 
             pointer-events: none;
             background-repeat: repeat;
         }
@@ -67,7 +65,7 @@
             border: 1px solid var(--glass-border);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             user-select: none;
-            pointer-events: none; /* Let clicks pass through to canvas physics */
+            pointer-events: none; 
         }
 
         .time {
@@ -92,31 +90,34 @@
         /* 3. CONTROLS (Corner) */
         .controls {
             position: fixed;
-            top: 24px;
-            right: 24px;
+            /* Safe area logic for notches/corners */
+            top: max(30px, env(safe-area-inset-top) + 20px);
+            right: max(30px, env(safe-area-inset-right) + 20px);
             z-index: 100;
             display: flex;
-            gap: 12px;
+            gap: 16px; /* More breathing room between buttons */
         }
 
         .icon-btn {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            width: 48px;
-            height: 48px;
-            border-radius: 14px;
+            width: 52px; /* Slightly larger touch target */
+            height: 52px;
+            border-radius: 16px;
             display: flex;
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
 
         .icon-btn:hover {
             background: rgba(255, 255, 255, 0.25);
-            transform: scale(1.05);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
         }
 
         .icon-btn:active {
@@ -124,8 +125,8 @@
         }
 
         .icon-btn svg {
-            width: 24px;
-            height: 24px;
+            width: 26px;
+            height: 26px;
             stroke-width: 2;
             stroke: currentColor;
             fill: none;
@@ -150,12 +151,15 @@
     <!-- Controls -->
     <div class="controls">
         <button class="icon-btn" onclick="app.cyclePalette()" title="Change Aura">
-            <!-- Easel / Palette Icon -->
+            <!-- Easel Icon -->
             <svg viewBox="0 0 24 24">
-                <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
-                <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
-                <path d="M2 2l7.586 7.586"></path>
-                <circle cx="11" cy="11" r="2"></circle>
+                <!-- Legs -->
+                <path d="M12 2l-8 19"></path>
+                <path d="M12 2l8 19"></path>
+                <!-- Crossbar -->
+                <path d="M4 16h16"></path>
+                <!-- Canvas Board -->
+                <rect x="7" y="6" width="10" height="8" rx="1"></rect>
             </svg>
         </button>
         <button class="icon-btn" onclick="app.toggleFullscreen()" title="Fullscreen">
@@ -168,17 +172,16 @@
 
 <script>
 /**
- * THE LIQUID AURA ENGINE v2.0
- * Optimized for brightness, touch interactions, and fluid physics.
+ * THE LIQUID AURA ENGINE v2.1
+ * Adjustments: Slower physics, Easel Icon, Safe-area positioning.
  */
 
-// Updated Palettes: Much brighter/neon to cut through the darkness
 const PALETTES = {
-    neon: ['#00FF87', '#60EFFF', '#0061FF', '#BC13FE'], // Electric Blue/Green
-    warm: ['#FF930F', '#FFF95B', '#FF0F7B', '#F89B29'], // Hot Pink/Orange
-    ether: ['#6DD5FA', '#FFFFFF', '#2980B9', '#E0EAFC'], // Ice/White
-    toxic: ['#CCFF00', '#00FF66', '#9933FF', '#CC00FF'], // Acid Green/Purple
-    plasma: ['#FEAC5E', '#C779D0', '#4BC0C8', '#FFFFFF'], // Soft Pastel Glow
+    neon: ['#00FF87', '#60EFFF', '#0061FF', '#BC13FE'], 
+    warm: ['#FF930F', '#FFF95B', '#FF0F7B', '#F89B29'], 
+    ether: ['#6DD5FA', '#FFFFFF', '#2980B9', '#E0EAFC'], 
+    toxic: ['#CCFF00', '#00FF66', '#9933FF', '#CC00FF'], 
+    plasma: ['#FEAC5E', '#C779D0', '#4BC0C8', '#FFFFFF'], 
 };
 
 class Blob {
@@ -189,10 +192,16 @@ class Blob {
     reset(w, h, colors) {
         this.x = Math.random() * w;
         this.y = Math.random() * h;
-        this.vx = (Math.random() - 0.5) * 3; // Slightly faster for more energy
-        this.vy = (Math.random() - 0.5) * 3;
-        this.radius = Math.random() * 180 + 120; // Larger blobs
-        this.growth = Math.random() * 0.8 + 0.2;
+        
+        // CALMER PHYSICS: Reduced multiplier from 3 to 0.8
+        this.vx = (Math.random() - 0.5) * 0.8; 
+        this.vy = (Math.random() - 0.5) * 0.8;
+        
+        this.radius = Math.random() * 180 + 120;
+        
+        // SLOWER BREATHING: Reduced growth rate
+        this.growth = Math.random() * 0.3 + 0.1; 
+        
         this.maxRadius = this.radius + 60;
         this.minRadius = this.radius - 60;
         this.currentRadius = this.radius;
@@ -214,12 +223,13 @@ class Blob {
         if (dist < forceRadius) {
             const force = (forceRadius - dist) / forceRadius;
             // Gentle repulsion physics
-            this.vx -= (dx / dist) * force * 0.8;
-            this.vy -= (dy / dist) * force * 0.8;
+            this.vx -= (dx / dist) * force * 0.5; // Reduced force
+            this.vy -= (dy / dist) * force * 0.5;
         }
 
         // 3. Apply Velocity & Friction limits
-        const maxSpeed = 6;
+        // CALMER LIMITS: Max speed reduced from 6 to 1.5
+        const maxSpeed = 1.5;
         this.vx = Math.max(Math.min(this.vx, maxSpeed), -maxSpeed);
         this.vy = Math.max(Math.min(this.vy, maxSpeed), -maxSpeed);
 
@@ -238,11 +248,10 @@ class Blob {
 
     draw(ctx) {
         ctx.beginPath();
-        // Radial gradient for the "Orb" look
         const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.currentRadius);
         gradient.addColorStop(0, this.color);
-        gradient.addColorStop(0.6, this.color); // Solid core
-        gradient.addColorStop(1, 'rgba(0,0,0,0)'); // Fade edge
+        gradient.addColorStop(0.6, this.color); 
+        gradient.addColorStop(1, 'rgba(0,0,0,0)'); 
 
         ctx.fillStyle = gradient;
         ctx.arc(this.x, this.y, this.currentRadius, 0, Math.PI * 2);
@@ -275,7 +284,6 @@ class App {
     init() {
         this.resize();
         this.blobs = [];
-        // Create 7 blobs for density
         for (let i = 0; i < 7; i++) {
             this.blobs.push(new Blob(this.width, this.height, this.currentColors));
         }
@@ -312,7 +320,6 @@ class App {
             this.mouseY = e.clientY;
         });
 
-        // Passive false to allow preventing default if needed, though touch-action handles most
         window.addEventListener('touchmove', (e) => {
             this.mouseX = e.touches[0].clientX;
             this.mouseY = e.touches[0].clientY;
@@ -324,7 +331,6 @@ class App {
         const newKey = this.paletteKeys[this.paletteIndex];
         this.currentColors = PALETTES[newKey];
         
-        // Smoothly transition existing blobs to new colors
         this.blobs.forEach(blob => {
             blob.color = this.currentColors[Math.floor(Math.random() * this.currentColors.length)];
         });
@@ -353,10 +359,6 @@ class App {
 
     loop() {
         this.ctx.clearRect(0, 0, this.width, this.height);
-        
-        // "screen" blend mode makes colors additive (brighter)
-        // "hard-light" makes them richer. 
-        // We use screen here to satisfy the "brighten" request.
         this.ctx.globalCompositeOperation = 'screen'; 
 
         this.blobs.forEach(blob => {
