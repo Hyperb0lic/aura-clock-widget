@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aura Clock</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            user-select: none;
+            cursor: pointer;
+        }
+
+        /* The Gradient Background Layer */
+        .aura-bg {
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                45deg,
+                var(--c1), var(--c2), var(--c3), var(--c4)
+            );
+            background-size: 400% 400%;
+            animation: auraFlow 15s ease infinite;
+            z-index: 1;
+            transition: background 1s ease;
+        }
+
+        /* The Glassmorphism Overlay */
+        .glass {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(20px); /* Softens the colors */
+        }
+
+        /* The Time Display */
+        #clock {
+            font-size: 15vw; /* Responsive huge text */
+            font-weight: 200; /* Thin elegant font */
+            color: rgba(255, 255, 255, 0.9);
+            letter-spacing: -2px;
+            text-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Animation Keyframes */
+        @keyframes auraFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Themes (CSS Variables) */
+        :root {
+            /* Theme 1: Cotton Candy (Default) */
+            --c1: #ff9a9e;
+            --c2: #fad0c4;
+            --c3: #a18cd1;
+            --c4: #fbc2eb;
+        }
+
+        body.theme-sunset {
+            /* Theme 2: Sunset */
+            --c1: #ff7e5f;
+            --c2: #feb47b;
+            --c3: #ff6a88;
+            --c4: #ff9966;
+        }
+
+        body.theme-ocean {
+            /* Theme 3: Deep Ocean */
+            --c1: #2193b0;
+            --c2: #6dd5ed;
+            --c3: #cc2b5e;
+            --c4: #753a88;
+        }
+        
+        .hint {
+            position: absolute;
+            bottom: 20px;
+            color: rgba(255,255,255,0.5);
+            font-size: 0.8rem;
+            z-index: 3;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+<body onclick="changeTheme()">
+
+    <div class="aura-bg"></div>
+    
+    <div class="glass">
+        <div id="clock">00:00</div>
+        <div class="hint">Tap to Change Vibe</div>
+    </div>
+
+    <script>
+        function updateClock() {
+            const now = new Date();
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+            
+            // Format: 09:05
+            hours = hours < 10 ? '0' + hours : hours;
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            
+            document.getElementById('clock').innerText = hours + ':' + minutes;
+        }
+
+        // Theme Switcher Logic
+        let currentTheme = 0;
+        const themes = ['', 'theme-sunset', 'theme-ocean'];
+
+        function changeTheme() {
+            currentTheme = (currentTheme + 1) % themes.length;
+            document.body.className = themes[currentTheme];
+        }
+
+        // Start
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
+</body>
+</html>
