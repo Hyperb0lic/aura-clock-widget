@@ -37,7 +37,6 @@
             width: 100%;
             height: 100%;
             z-index: 0;
-            /* High contrast and brightness for "OLED Pop" */
             filter: blur(var(--blur-strength)) contrast(160%) brightness(1.4);
             transform: scale(1.2); 
         }
@@ -49,7 +48,7 @@
             width: 100%;
             height: 100%;
             z-index: 1;
-            opacity: 0.04; /* Reduced slightly for cleaner look */
+            opacity: 0.04;
             pointer-events: none;
             background-repeat: repeat;
         }
@@ -59,7 +58,7 @@
             position: relative;
             z-index: 2;
             text-align: center;
-            padding: 2.5rem 3rem; /* Reduced horizontal padding slightly */
+            padding: 2.5rem 3rem;
             border-radius: 30px;
             background: var(--glass-bg);
             backdrop-filter: blur(20px);
@@ -90,13 +89,12 @@
             letter-spacing: 0.3em;
             color: rgba(255, 255, 255, 0.7);
             font-weight: 500;
-            white-space: nowrap; /* CRITICAL FIX: Prevents date wrapping */
+            white-space: nowrap;
         }
 
-        /* 3. CONTROLS (Corner) */
+        /* 3. CONTROLS (Top Right) */
         .controls {
             position: fixed;
-            /* Increased base margin from 20px to 30px to avoid rounded corners clipping */
             top: max(30px, env(safe-area-inset-top) + 20px);
             right: max(30px, env(safe-area-inset-right) + 20px);
             z-index: 100;
@@ -140,6 +138,42 @@
             stroke-linejoin: round;
         }
 
+        /* 4. SUPPORT BUTTON (Bottom Right) */
+        .support-btn {
+            position: fixed;
+            bottom: max(30px, env(safe-area-inset-bottom) + 20px);
+            right: max(30px, env(safe-area-inset-right) + 20px);
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.8);
+            padding: 12px 24px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            font-weight: 600;
+            z-index: 100;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .support-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            color: #fff;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .support-btn:active {
+            transform: scale(0.98);
+        }
+
     </style>
 </head>
 <body>
@@ -174,10 +208,15 @@
         </button>
     </div>
 
+    <!-- Support Button -->
+    <a href="https://buymeacoffee.com/Hyperb0lic" target="_blank" rel="noopener noreferrer" class="support-btn">
+        <span>☕</span> Support
+    </a>
+
 <script>
 /**
- * THE LIQUID AURA ENGINE v3.1
- * Fixes: Button clipping, Date wrapping, Top-screen void.
+ * THE LIQUID AURA ENGINE v3.2
+ * Added: Support Button Integration
  */
 
 const PALETTES = {
@@ -213,8 +252,7 @@ class Blob {
     }
 
     update(w, h, mouseX, mouseY) {
-        // Wall Bouncing (Wide margins to allow blobs to float partially off-screen)
-        // This prevents the "black void" at edges
+        // Wall Bouncing (Wide margins)
         const margin = 200;
         if (this.x < -margin || this.x > w + margin) this.vx *= -1;
         if (this.y < -margin || this.y > h + margin) this.vy *= -1;
@@ -288,7 +326,7 @@ class App {
     init() {
         this.resize();
         this.blobs = [];
-        // Increased count to 12 to fill voids
+        // 12 Blobs for coverage
         for (let i = 0; i < 12; i++) {
             this.blobs.push(new Blob(this.width, this.height, this.currentColors));
         }
