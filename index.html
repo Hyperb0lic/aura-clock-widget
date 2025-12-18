@@ -19,14 +19,17 @@
             background: #000000;
             overflow: hidden;
             font-family: var(--font-main);
+            /* Dynamic Viewport Height ensures body fits exactly within browser UI */
             height: 100vh;
-            height: 100dvh; /* Mobile viewport fix */
+            height: 100dvh; 
             width: 100vw;
             display: flex;
             justify-content: center;
             align-items: center;
             cursor: crosshair;
-            touch-action: none; 
+            touch-action: none;
+            /* Critical for absolute positioning of children */
+            position: relative; 
         }
 
         /* 1. VISUAL ENGINE LAYERS */
@@ -92,10 +95,13 @@
             white-space: nowrap;
         }
 
-        /* 3. CONTROLS (Top Right) */
+        /* 3. CONTROLS (Top Right) 
+           Changed to absolute to stick to the 100dvh container 
+        */
         .controls {
-            position: fixed;
-            top: max(30px, env(safe-area-inset-top) + 20px);
+            position: absolute;
+            /* Increased top margin to clear address bars/notches safely */
+            top: max(40px, env(safe-area-inset-top) + 30px);
             right: max(30px, env(safe-area-inset-right) + 20px);
             z-index: 100;
             display: flex;
@@ -138,10 +144,13 @@
             stroke-linejoin: round;
         }
 
-        /* 4. SUPPORT BUTTON (Bottom Right) */
+        /* 4. SUPPORT BUTTON (Bottom Right) 
+           Changed to absolute to stick to the 100dvh container
+        */
         .support-btn {
-            position: fixed;
-            bottom: max(30px, env(safe-area-inset-bottom) + 20px);
+            position: absolute;
+            /* Increased bottom margin to clear swipe bars safely */
+            bottom: max(40px, env(safe-area-inset-bottom) + 30px);
             right: max(30px, env(safe-area-inset-right) + 20px);
             background: rgba(255, 255, 255, 0.08);
             backdrop-filter: blur(10px);
@@ -215,8 +224,8 @@
 
 <script>
 /**
- * THE LIQUID AURA ENGINE v3.2
- * Added: Support Button Integration
+ * THE LIQUID AURA ENGINE v3.3
+ * Fixes: Positioning logic changed to absolute to prevent UI clipping.
  */
 
 const PALETTES = {
