@@ -2,135 +2,398 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aura Clock</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Liquid Aura Clock</title>
     <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
+        :root {
+            --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-color: rgba(255, 255, 255, 0.9);
+            --blur-strength: 80px; /* The secret sauce for the liquid look */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #000;
             overflow: hidden;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            user-select: none;
-            cursor: pointer;
-        }
-
-        /* The Gradient Background Layer */
-        .aura-bg {
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(
-                45deg,
-                var(--c1), var(--c2), var(--c3), var(--c4)
-            );
-            background-size: 400% 400%;
-            animation: auraFlow 15s ease infinite;
-            z-index: 1;
-            transition: background 1s ease;
-        }
-
-        /* The Glassmorphism Overlay */
-        .glass {
-            position: relative;
-            z-index: 2;
-            width: 100%;
-            height: 100%;
+            font-family: var(--font-main);
+            height: 100vh;
+            width: 100vw;
             display: flex;
             justify-content: center;
             align-items: center;
-            backdrop-filter: blur(20px); /* Softens the colors */
+            cursor: crosshair;
         }
 
-        /* The Time Display */
-        #clock {
-            font-size: 15vw; /* Responsive huge text */
-            font-weight: 200; /* Thin elegant font */
-            color: rgba(255, 255, 255, 0.9);
+        /* 1. VISUAL ENGINE LAYERS */
+        #canvas-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            filter: blur(var(--blur-strength)) contrast(120%);
+            transform: scale(1.2); /* Bleed edges to avoid blur fading */
+            transition: filter 0.5s ease;
+        }
+
+        #noise-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            opacity: 0.07;
+            pointer-events: none;
+            background-repeat: repeat;
+        }
+
+        /* 2. UI (GLASSMORPHISM) */
+        .clock-wrapper {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            padding: 3rem 5rem;
+            border-radius: 24px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            transition: transform 0.3s ease;
+            user-select: none;
+        }
+
+        .clock-wrapper:hover {
+            transform: scale(1.02);
+        }
+
+        .time {
+            font-size: clamp(3rem, 12vw, 8rem);
+            font-weight: 200;
+            color: var(--text-color);
+            line-height: 1;
             letter-spacing: -2px;
-            text-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            font-variant-numeric: tabular-nums;
+            text-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
 
-        /* Animation Keyframes */
-        @keyframes auraFlow {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        .date {
+            margin-top: 1rem;
+            font-size: clamp(0.8rem, 2vw, 1.2rem);
+            text-transform: uppercase;
+            letter-spacing: 0.3em;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 500;
         }
 
-        /* Themes (CSS Variables) */
-        :root {
-            /* Theme 1: Cotton Candy (Default) */
-            --c1: #ff9a9e;
-            --c2: #fad0c4;
-            --c3: #a18cd1;
-            --c4: #fbc2eb;
-        }
-
-        body.theme-sunset {
-            /* Theme 2: Sunset */
-            --c1: #ff7e5f;
-            --c2: #feb47b;
-            --c3: #ff6a88;
-            --c4: #ff9966;
-        }
-
-        body.theme-ocean {
-            /* Theme 3: Deep Ocean */
-            --c1: #2193b0;
-            --c2: #6dd5ed;
-            --c3: #cc2b5e;
-            --c4: #753a88;
-        }
-        
         .hint {
             position: absolute;
-            bottom: 20px;
-            color: rgba(255,255,255,0.5);
-            font-size: 0.8rem;
-            z-index: 3;
+            bottom: 30px;
+            width: 100%;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 0.7rem;
+            letter-spacing: 1px;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            z-index: 2;
+            pointer-events: none;
         }
+
+        /* 3. SETTINGS MODAL */
+        .modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background: #1a1a1a;
+            padding: 2rem;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .modal h2 {
+            color: white;
+            font-weight: 300;
+            margin-bottom: 1.5rem;
+            letter-spacing: 1px;
+        }
+
+        .palette-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+
+        .palette-btn {
+            height: 60px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .palette-btn:hover { transform: scale(1.05); }
+        .palette-btn:active { transform: scale(0.95); }
+
+        /* Palette Previews */
+        .p-neon { background: linear-gradient(45deg, #00f260, #0575e6); }
+        .p-sunset { background: linear-gradient(45deg, #ff9966, #ff5e62); }
+        .p-dark { background: linear-gradient(45deg, #232526, #414345); }
+        .p-candy { background: linear-gradient(45deg, #ff9a9e, #fecfef); }
+        .p-ocean { background: linear-gradient(45deg, #2193b0, #6dd5ed); }
+        .p-royal { background: linear-gradient(45deg, #141E30, #243B55); }
+
     </style>
 </head>
-<body onclick="changeTheme()">
+<body>
 
-    <div class="aura-bg"></div>
-    
-    <div class="glass">
-        <div id="clock">00:00</div>
-        <div class="hint">Tap to Change Vibe</div>
+    <!-- Visual Engine -->
+    <canvas id="canvas-layer"></canvas>
+    <div id="noise-layer"></div>
+
+    <!-- UI -->
+    <div class="clock-wrapper">
+        <div class="time" id="time-display">00:00:00</div>
+        <div class="date" id="date-display">LOADING SYSTEM</div>
     </div>
 
-    <script>
-        function updateClock() {
-            const now = new Date();
-            let hours = now.getHours();
-            let minutes = now.getMinutes();
-            
-            // Format: 09:05
-            hours = hours < 10 ? '0' + hours : hours;
-            minutes = minutes < 10 ? '0' + minutes : minutes;
-            
-            document.getElementById('clock').innerText = hours + ':' + minutes;
+    <div class="hint">Double Click to Configure</div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settings-modal">
+        <div class="modal-content">
+            <h2>Select Aura</h2>
+            <div class="palette-grid">
+                <button class="palette-btn p-neon" onclick="app.setPalette('neon')"></button>
+                <button class="palette-btn p-sunset" onclick="app.setPalette('sunset')"></button>
+                <button class="palette-btn p-candy" onclick="app.setPalette('candy')"></button>
+                <button class="palette-btn p-ocean" onclick="app.setPalette('ocean')"></button>
+                <button class="palette-btn p-royal" onclick="app.setPalette('royal')"></button>
+                <button class="palette-btn p-dark" onclick="app.setPalette('dark')"></button>
+            </div>
+            <p style="color:#666; font-size: 0.8rem; margin-top: 20px; cursor: pointer;" onclick="app.toggleModal()">Close</p>
+        </div>
+    </div>
+
+<script>
+/**
+ * THE LIQUID AURA ENGINE
+ * A composite physics system using Canvas 2D.
+ */
+
+const PALETTES = {
+    neon: ['#00f260', '#0575e6', '#e100ff', '#00dbde'],
+    sunset: ['#ff9966', '#ff5e62', '#f2994a', '#f2c94c'],
+    candy: ['#ff9a9e', '#fecfef', '#a18cd1', '#fbc2eb'],
+    ocean: ['#2193b0', '#6dd5ed', '#cc2b5e', '#753a88'],
+    royal: ['#141E30', '#243B55', '#3a7bd5', '#3a6073'],
+    dark: ['#232526', '#414345', '#2C3E50', '#000000']
+};
+
+class Blob {
+    constructor(canvasWidth, canvasHeight, colors) {
+        this.reset(canvasWidth, canvasHeight, colors);
+    }
+
+    reset(w, h, colors) {
+        this.x = Math.random() * w;
+        this.y = Math.random() * h;
+        // Random velocity vector
+        this.vx = (Math.random() - 0.5) * 2; 
+        this.vy = (Math.random() - 0.5) * 2;
+        // Size properties
+        this.radius = Math.random() * 150 + 100; // Base radius
+        this.growth = Math.random() * 0.5 + 0.5; // Pulse speed
+        this.maxRadius = this.radius + 50;
+        this.minRadius = this.radius - 50;
+        this.currentRadius = this.radius;
+        this.growing = true;
+        // Color
+        this.color = colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    update(w, h, mouseX, mouseY) {
+        // 1. Wall Bouncing
+        if (this.x < -100 || this.x > w + 100) this.vx *= -1;
+        if (this.y < -100 || this.y > h + 100) this.vy *= -1;
+
+        // 2. Mouse Interaction (Attraction/Repulsion field)
+        const dx = mouseX - this.x;
+        const dy = mouseY - this.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const forceRadius = 400;
+
+        if (dist < forceRadius) {
+            const force = (forceRadius - dist) / forceRadius;
+            // Gentle repulsion
+            this.vx -= (dx / dist) * force * 0.5;
+            this.vy -= (dy / dist) * force * 0.5;
         }
 
-        // Theme Switcher Logic
-        let currentTheme = 0;
-        const themes = ['', 'theme-sunset', 'theme-ocean'];
+        // 3. Apply Velocity & Friction limits
+        const maxSpeed = 4;
+        this.vx = Math.max(Math.min(this.vx, maxSpeed), -maxSpeed);
+        this.vy = Math.max(Math.min(this.vy, maxSpeed), -maxSpeed);
 
-        function changeTheme() {
-            currentTheme = (currentTheme + 1) % themes.length;
-            document.body.className = themes[currentTheme];
+        this.x += this.vx;
+        this.y += this.vy;
+
+        // 4. Pulse Radius
+        if (this.growing) {
+            this.currentRadius += this.growth;
+            if (this.currentRadius > this.maxRadius) this.growing = false;
+        } else {
+            this.currentRadius -= this.growth;
+            if (this.currentRadius < this.minRadius) this.growing = true;
         }
+    }
 
-        // Start
-        setInterval(updateClock, 1000);
-        updateClock();
-    </script>
+    draw(ctx) {
+        ctx.beginPath();
+        // Create a radial gradient for that soft "aura" feel
+        const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.currentRadius);
+        gradient.addColorStop(0, this.color);
+        gradient.addColorStop(1, 'rgba(0,0,0,0)'); // Fade to transparent
+
+        ctx.fillStyle = gradient;
+        ctx.arc(this.x, this.y, this.currentRadius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.closePath();
+    }
+}
+
+class App {
+    constructor() {
+        this.canvas = document.getElementById('canvas-layer');
+        this.ctx = this.canvas.getContext('2d');
+        this.blobs = [];
+        this.mouseX = -1000;
+        this.mouseY = -1000;
+        this.currentColors = PALETTES.neon;
+        
+        this.init();
+        this.createNoise();
+        this.setupEvents();
+        this.loop();
+        this.updateClock();
+        setInterval(() => this.updateClock(), 1000);
+    }
+
+    init() {
+        this.resize();
+        // Create 6 blobs
+        this.blobs = [];
+        for (let i = 0; i < 6; i++) {
+            this.blobs.push(new Blob(this.width, this.height, this.currentColors));
+        }
+    }
+
+    resize() {
+        this.width = window.innerWidth;
+        this.height = window.innerHeight;
+        this.canvas.width = this.width;
+        this.canvas.height = this.height;
+    }
+
+    createNoise() {
+        // Generate static noise once to save GPU
+        const noiseCanvas = document.createElement('canvas');
+        noiseCanvas.width = 100;
+        noiseCanvas.height = 100;
+        const nCtx = noiseCanvas.getContext('2d');
+        const imgData = nCtx.createImageData(100, 100);
+        const buffer32 = new Uint32Array(imgData.data.buffer);
+        
+        for (let i = 0; i < buffer32.length; i++) {
+            if (Math.random() < 0.5) buffer32[i] = 0xff000000; // Black noise
+        }
+        
+        nCtx.putImageData(imgData, 0, 0);
+        document.getElementById('noise-layer').style.backgroundImage = `url(${noiseCanvas.toDataURL()})`;
+    }
+
+    setupEvents() {
+        window.addEventListener('resize', () => this.resize());
+        
+        window.addEventListener('mousemove', (e) => {
+            this.mouseX = e.clientX;
+            this.mouseY = e.clientY;
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            this.mouseX = e.touches[0].clientX;
+            this.mouseY = e.touches[0].clientY;
+        }, {passive: true});
+
+        document.addEventListener('dblclick', () => this.toggleModal());
+    }
+
+    toggleModal() {
+        document.getElementById('settings-modal').classList.toggle('active');
+    }
+
+    setPalette(key) {
+        this.currentColors = PALETTES[key];
+        // Re-assign colors to existing blobs smoothly
+        this.blobs.forEach(blob => {
+            blob.color = this.currentColors[Math.floor(Math.random() * this.currentColors.length)];
+        });
+        this.toggleModal();
+    }
+
+    updateClock() {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('en-US', { hour12: false });
+        const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+        
+        document.getElementById('time-display').textContent = timeStr;
+        document.getElementById('date-display').textContent = dateStr;
+    }
+
+    loop() {
+        // Clear screen
+        this.ctx.clearRect(0, 0, this.width, this.height);
+        
+        // Use 'hard-light' or 'screen' for that vivid blend
+        this.ctx.globalCompositeOperation = 'hard-light';
+
+        this.blobs.forEach(blob => {
+            blob.update(this.width, this.height, this.mouseX, this.mouseY);
+            blob.draw(this.ctx);
+        });
+
+        requestAnimationFrame(() => this.loop());
+    }
+}
+
+// Start the engine
+const app = new App();
+
+</script>
 </body>
 </html>
